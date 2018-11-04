@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-101233231-2"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'UA-101233231-2');
+        </script>
+        <meta charset="UTF-8">
+        <meta name="theme-color" content="#97ce4c">
+        <meta name="description" content="Browse through all rick and morty characters!" />
+        <meta property="og:title" content="Rick and Morty Characters" />
+        <meta property="og:description" content="Browse through all rick and morty characters!" />
+        <meta property="og:image" content="https://rickandmortyapi.com/api/character/avatar/1.jpeg" />
+        <meta property="og:url" content="https://parthshah.xyz/rickandmorty" />
+        <link rel="shortcut icon" href="https://rickandmortyapi.com/api/character/avatar/1.jpeg" type="image/x-icon" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Poor+Story" rel="stylesheet">
+        <title>Rick And Morty Characters</title>
+        <style>
+            [v-cloak] {
+                display: none;
+            }
+
+            body{
+                font-family: 'Poor Story';
+                font-size: 1.2rem;
+            }
+        </style>
+    </head>
+    <body>
+        
+        <div class="container" id="app"> 
+            <div class="row"></div>
+
+            <div class="row" v-if="state == 'welcome'">
+                <br><br><br><br><br>
+                <div class="col s12 center">
+                    <h4 class="grey-text text-darken-3"><a href="#" @click="state='cards';fetchChar()">Get Random Characters</a></h4>
+                    <h5 class="grey-text text-darken-3">Or</h5>
+                    <h4 class="grey-text text-darken-3"><a href="#" @click="state='all'">Show All Characters</a></h4>
+                </div>
+            </div>
+
+            <div class="row" v-cloak v-if="state == 'cards'" v-cloak>
+                <character-card :image="image" :name="name" :status="status" :species="species" :gender="gender" :origin="origin" cols-config="s10 offset-s1 m6 offset-m3 l4 offset-l4"></character-card>
+                <div class="col s12 center">
+                    <a href="#" @click="fetchChar()">Next</a><br><br>
+                    <a href="#" @click="state='welcome'">Home</a>
+                </div>
+            </div>
+
+            <div class="row" v-if="state == 'all'">
+                <character-card v-for="instance in allChars" :key="instance.id" cols-config="s10 offset-s1 m6 l4" :image="instance.image" :name="instance.name" :status="instance.status" :species="instance.species" :gender="instance.gender" :origin="instance.origin.name"></character-card>
+                <div class="col s12 center">
+                    <button @click="prevPage()">Prev</button>
+                    <button @click="nextPage()">Next</button><br>
+                    <button @click="state='welcome'">Home</button>
+                </div>
+            </div>
+
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>    
+        <script>
+
+            Vue.component('character-card', {
+                props: ['image', 'name', 'status', 'species', 'gender', 'origin', 'colsConfig'],
+                template: "<div class='col' :class='colsConfig'><div class='card'><div class='card-image'><img :src='image'></div><div class='card-content'><h5 class='center' v-html='name'></h5><p><b>Status : </b>{{status}}</p><p><b>Species : </b>{{species}}</p><p><b>Gender : </b>{{gender}}</p><p><b>Origin : </b>{{origin}}</p></div></div></div>",
+            });
+            
+            new Vue({
+                el: '#app',
+                
+                data:{
+                    state: 'welcome',
+                    image: '',
+                    name: '',
+                    status: '',
+                    species: '',
+                    gender: '',
+                    origin: '',
+                    nextResponse: {
+                        image:'',
+                        name:'',
+                        status:'',
+                        species:'',
+                        gender:'',
+                        origin:{
+                            name:''
+                        }
+                    },
+                    allChars:[],
+                    page:1
+                },
+
+                methods:{
+                    fetchChar: function(){
+
+                        this.image = this.nextResponse.image;
+                        this.name = this.nextResponse.name;
+                        this.status = this.nextResponse.status;
+                        this.species = this.nextResponse.species;
+                        this.gender = this.nextResponse.gender;
+                        this.origin = this.nextResponse.origin.name;
+
+                        var self = this;
+                        axios.get('https://rickandmortyapi.com/api/character/' + Math.floor((Math.random() * 493) + 1))
+                            .then(function(response){
+                                self.nextResponse = response.data;
+                            })
+                    },
+
+                    getPage: function(){
+
+                        var self = this;
+                        axios.get('https://rickandmortyapi.com/api/character/?page='+this.page)
+                            .then(function(response){
+                                self.allChars = response.data.results
+                            })
+                    },
+
+                    nextPage: function(){
+                        this.page = this.page + 1;
+                        this.getPage();
+                    },
+
+                    prevPage: function(){
+                        this.page = this.page - 1;
+                        this.getPage();
+                    }
+                },
+
+                mounted: function(){
+                    this.fetchChar();
+                    this.getPage();
+                }
+            });
+        </script>
+    </body>
+</html>
